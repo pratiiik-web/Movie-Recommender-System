@@ -15,7 +15,8 @@ def fetch_poster(movie_id):
 
     url = f"https://api.themoviedb.org/3/movie/{movie_id}"
 
-    for attempt in range(3):
+    # Windows
+    if os.name == "nt":
 
         try:
 
@@ -26,8 +27,6 @@ def fetch_poster(movie_id):
                     "-sS",
                     "-G",
                     url,
-                    "--connect-timeout", "10",
-                    "--max-time", "30",
                     "--data-urlencode",
                     f"api_key={API_KEY}",
                     "--data-urlencode",
@@ -41,29 +40,45 @@ def fetch_poster(movie_id):
             )
 
             if result.returncode != 0:
-                print("Curl failed:", result.stderr)
-                continue
+                return None
 
             if not result.stdout:
-                continue
+                return None
 
             data = json.loads(result.stdout)
 
-            poster_path = data.get("poster_path")
+        except Exception as e:
 
-            if poster_path:
-                return "https://image.tmdb.org/t/p/w500" + poster_path
-
+            print("Windows TMDB error:", e)
             return None
 
-        except subprocess.TimeoutExpired:
-            print(f"TMDB timeout for movie {movie_id}. Attempt {attempt + 1}/3")
+    # Streamlit Cloud / Linux
+    else:
 
-        except json.JSONDecodeError:
-            print("Invalid JSON returned by TMDB")
+        try:
 
-        except Exception as e:
-            print("Poster error:", e)
+            response = requests.get(
+                url,
+                params={
+                    "api_key": API_KEY,
+                    "language": "en-US"
+                },
+                timeout=20
+            )
+
+            response.raise_for_status()
+
+            data = response.json()
+
+        except requests.RequestException as e:
+
+            print("TMDB request error:", e)
+            return None
+
+    poster_path = data.get("poster_path")
+
+    if poster_path:
+        return "https://image.tmdb.org/t/p/w500" + poster_path
 
     return None
 
