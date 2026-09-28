@@ -1,67 +1,71 @@
 import streamlit as st
 import pickle
 import pandas as pd
+import requests
 import subprocess
 import json
 import os
 
 
-API_KEY = os.getenv("TMDB_API_KEY")
-print("API KEY EXISTS:", bool(API_KEY))
+# Get API key
+API_KEY = st.secrets["TMDB_API_KEY"]
 
 
 def fetch_poster(movie_id):
 
     url = f"https://api.themoviedb.org/3/movie/{movie_id}"
 
-    result = subprocess.run(
-        [
-            "curl.exe",
-            "-4",
-            "-sS",
-            "-G",
-            url,
-            "--data-urlencode",
-            f"api_key={API_KEY}",
-            "--data-urlencode",
-            "language=en-US"
-        ],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=20
-    )
+    for attempt in range(3):
 
-    print("\n==============================")
-    print("MOVIE ID:", movie_id)
-    print("RETURN CODE:", result.returncode)
+        try:
 
-    if result.returncode != 0:
-        print("CURL ERROR:", result.stderr)
-        return None
+            result = subprocess.run(
+                [
+                    "curl.exe",
+                    "-4",
+                    "-sS",
+                    "-G",
+                    url,
+                    "--connect-timeout", "10",
+                    "--max-time", "30",
+                    "--data-urlencode",
+                    f"api_key={API_KEY}",
+                    "--data-urlencode",
+                    "language=en-US"
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=35
+            )
 
-    if not result.stdout:
-        print("No response received from curl")
-        return None
+            if result.returncode != 0:
+                print("Curl failed:", result.stderr)
+                continue
 
-    try:
-        data = json.loads(result.stdout)
-    except json.JSONDecodeError as e:
-        print("JSON ERROR:", e)
-        print("RAW RESPONSE:", result.stdout)
-        return None
+            if not result.stdout:
+                continue
 
-    poster_path = data.get("poster_path")
+            data = json.loads(result.stdout)
 
-    print("POSTER PATH:", poster_path)
+            poster_path = data.get("poster_path")
 
-    if poster_path:
-        return "https://image.tmdb.org/t/p/w500" + poster_path
+            if poster_path:
+                return "https://image.tmdb.org/t/p/w500" + poster_path
 
-    print("NO POSTER FOUND")
+            return None
+
+        except subprocess.TimeoutExpired:
+            print(f"TMDB timeout for movie {movie_id}. Attempt {attempt + 1}/3")
+
+        except json.JSONDecodeError:
+            print("Invalid JSON returned by TMDB")
+
+        except Exception as e:
+            print("Poster error:", e)
+
     return None
-
 
 def recommend(movie_title):
 
@@ -93,7 +97,9 @@ def recommend(movie_title):
     return recommended_movies, recommended_movies_posters
 
 
+# --------------------------------
 # Load data
+# --------------------------------
 
 movies_dict = pickle.load(
     open("movie_dict.pkl", "rb")
@@ -106,7 +112,9 @@ similarity = pickle.load(
 )
 
 
+# --------------------------------
 # Streamlit UI
+# --------------------------------
 
 st.title("Movies Recommendation System")
 
