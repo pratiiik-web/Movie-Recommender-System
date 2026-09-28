@@ -90,7 +90,7 @@ The app will open at # 🎬 Movie Recommender System
 
 A content-based movie recommendation web app. Pick a movie you like, and the app suggests similar movies based on their content (overview, genres, keywords, cast, and crew).
 
-🔗 **Live Demo:** [Add your deployed app link here]([https://your-app-link.streamlit.app](https://movie-recommender-system-bvzyn8lpzzgula3ezqjuxh.streamlit.app/))
+🔗 **Live Demo:** ([Add your deployed app link here]([https://your-app-link.streamlit.app](https://movie-recommender-system-bvzyn8lpzzgula3ezqjuxh.streamlit.app/))
 
 ---
 
