@@ -149,10 +149,48 @@ if st.button("Recommend"):
 
         with col:
 
-            st.text(name)
+            # Movie title
+            st.markdown(
+                f"""
+                <div style="
+                    height: 55px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    font-size: 16px;
+                    font-weight: 600;
+                    line-height: 1.3;
+                    padding: 0 5px;
+                ">
+                    {name}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
+            # Poster
             if poster:
-                st.image(poster)
+                st.image(
+                    poster,
+                    width=150
+                )
 
             else:
-                st.write("Poster unavailable")
+                st.markdown(
+                    """
+                    <div style="
+                        width: 150px;
+                        height: 225px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        text-align: center;
+                        background: #262730;
+                        border-radius: 8px;
+                    ">
+                        Poster unavailable
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
